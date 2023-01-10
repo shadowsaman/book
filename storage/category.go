@@ -34,30 +34,59 @@ func InsertCategory(db *sql.DB, category models.CreateCategory) (string, error) 
 	return id, nil
 }
 
-func GetByIdCategory(db *sql.DB, req models.CategoryPrimeryKey) (models.Category, error) {
+func GetByIdCategory(db *sql.DB, req models.CategoryPrimeryKey) (models.Category2, error) {
 
 	var (
-		category models.Category
+		category models.Category2
 	)
-
 	query := `
-		SELECT
-			id,
-			name,
-			created_at,
-			updated_at
-		FROM category WHERE id = $1
-	`
+	select
+		c.id,
+		c.name,
+		c.created_at,
+		c.updated_at
+	from bookandcategory as bac
+	join category as c on c.id = bac.category_id
+	where bac.category_id = $1`
 
-	err := db.QueryRow(query, req.Id).Scan(
-		&category.Id,
-		&category.Name,
-		&category.CreatedAt,
-		&category.UpdatedAt,
-	)
+	query1 := `
+	select
+		b.id,
+		b.name,
+		b.price,
+		b.description
+	from bookandcategory as bac
+	join books as b on b.id = bac.book_id
+	where bac.category_id = $1
+	group by b.name, b.id`
 
+	rows, err := db.Query(query, req.Id)
 	if err != nil {
-		return models.Category{}, err
+		return models.Category2{}, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(
+			&category.Id,
+			&category.Name,
+			&category.CreatedAt,
+			&category.UpdatedAt,
+		)
+		rows, err = db.Query(query1, req.Id)
+
+		for rows.Next() {
+			var book models.BookCat
+			err = rows.Scan(
+				&book.Id,
+				&book.Name,
+				&book.Price,
+				&book.Description,
+			)
+			category.Book = append(category.Book, book)
+		}
+	}
+	if err != nil {
+		return models.Category2{}, err
 	}
 
 	return category, nil

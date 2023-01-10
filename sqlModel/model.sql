@@ -28,11 +28,3 @@ insert into bookandcategory (category_id, book_id) values
 ('cd99d095-2011-40a8-9b46-35b754616e6f', '8f748179-51f6-4433-83f9-739bb6eb76c6'),
 ('d6932c36-ddc4-4a4d-99bb-6cc19864df06', '1f76818c-b202-4366-a390-243c74c9e6ba'),
 ('7d15f744-05b4-4aaa-9237-0fd7d72f15c8', '6a04c1a2-2fd2-49b5-b507-c08ca80df44b');
-
-
-select
-	c.id,
-	c.name
-	from BookandCategory as cb
-	join category as c on c.id = cb.categoryId
-	where cb.category_id = cd99d095-2011-40a8-9b46-35b754616e6f
