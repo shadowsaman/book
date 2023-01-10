@@ -10,6 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// CreateBook godoc
+// @ID create_book
+// @Router /book [POST]
+// @Summary Create Book
+// @Description Create Book
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param book body models.CreateBook true "CreateBookRequestBody"
+// @Success 201 {object} models.CreateBook "GetBookBody"
+// @Response 400 {object} string "Invalid Argumant"
+// @Failure 500 {object} string "Server error"
 func (h *Handler) CreateBook(c *gin.Context) {
 
 	var book models.CreateBook
@@ -38,34 +50,18 @@ func (h *Handler) CreateBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-func (h *Handler) UpdateBook(c *gin.Context) {
-	var book models.UpdateBook
-
-	err := c.ShouldBindJSON(&book)
-	if err != nil {
-		log.Println("error while update marshal json: ", err)
-		c.JSON(http.StatusBadRequest, err.Error())
-		return
-	}
-
-	err = storage.UpdateBook(h.db, book)
-	if err != nil {
-		log.Println("error while update book: ", err)
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	res, err := storage.GetByIdBook(h.db, models.BookPrimeryKey{Id: book.Id})
-	if err != nil {
-		log.Println("error whiling update get by id book:", err.Error())
-		c.JSON(http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.JSON(202, res)
-
-}
-
+// GetByIdBook godoc
+// @ID get_by_id_book
+// @Router /book/{id} [GET]
+// @Summary Get By Id Book
+// @Description Get By Id Book
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param id path string true "id"
+// @Success 200 {object} models.Book "GetIdBookBody"
+// @Response 400 {object} string "Invalid Argumant"
+// @Failure 500 {object} string "Server error"
 func (h *Handler) GetByIDBook(c *gin.Context) {
 
 	id := c.Param("id")
@@ -80,6 +76,19 @@ func (h *Handler) GetByIDBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
+// GetListBook godoc
+// @ID get_list_book
+// @Router /book [GET]
+// @Summary Get List Book
+// @Description Get List Book
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param offset query int false "offset"
+// @Param limit query int false "limit"
+// @Success 200 {object} models.GetListBookResponse "GetListBook"
+// @Response 400 {object} string "Invalid Argumant"
+// @Failure 500 {object} string "Server error"
 func (h *Handler) GetListBook(c *gin.Context) {
 	var (
 		err       error
@@ -121,6 +130,61 @@ func (h *Handler) GetListBook(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
+// UpdateBook godoc
+// @ID update_book
+// @Router /book/{id} [PUT]
+// @Summary Update Book
+// @Description Update Book
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param id path string true "id"
+// @Param book body models.UpdateBookSwag true "UpdateBookRequestBody"
+// @Success 200 {object} models.UpdateBook "UpdateBookBody"
+// @Response 400 {object} string "Invalid Argumant"
+// @Failure 500 {object} string "Server error"
+func (h *Handler) UpdateBook(c *gin.Context) {
+	var book models.UpdateBook
+
+	book.Id = c.Param("id")
+
+	err := c.ShouldBindJSON(&book)
+	if err != nil {
+		log.Println("error while update marshal json: ", err)
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = storage.UpdateBook(h.db, book)
+	if err != nil {
+		log.Println("error while update book: ", err)
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	res, err := storage.GetByIdBook(h.db, models.BookPrimeryKey{Id: book.Id})
+	if err != nil {
+		log.Println("error whiling update get by id book:", err.Error())
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(202, res)
+
+}
+
+// DeleteBook godoc
+// @ID delete_book
+// @Router /book/{id} [DELETE]
+// @Summary Delete Book
+// @Description Delete Book
+// @Tags Book
+// @Accept json
+// @Produce json
+// @Param id path string true "id"
+// @Success 200 {object} models.Empty "DeleteBookBody"
+// @Response 400 {object} string "Invalid Argumant"
+// @Failure 500 {object} string "Server error"
 func (h *Handler) DeleteBook(c *gin.Context) {
 	id := c.Param("id")
 

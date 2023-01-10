@@ -38,37 +38,65 @@ func InsertBook(db *sql.DB, book models.CreateBook) (string, error) {
 	return id, nil
 }
 
-func GetByIdBook(db *sql.DB, req models.BookPrimeryKey) (models.Book, error) {
+func GetByIdBook(db *sql.DB, req models.BookPrimeryKey) (models.Book2, error) {
 
 	var (
-		book models.Book
+		book models.Book2
 	)
 
 	query := `
-		SELECT
-			id,
-			name,
-			price,
-			description,
-			created_at,
-			updated_at
-		FROM books WHERE id = $1
-	`
+	select
+		b.id,
+		b.name,
+		b.price,
+		b.Description,
+		b.updated_at,
+		b.created_at
+	from bookandcategory as bac
+	join books as b on b.id = bac.book_id
+	where b.id = $1
+	group by b.name,b.id`
 
-	err := db.QueryRow(query, req.Id).Scan(
-		&book.Id,
-		&book.Name,
-		&book.Price,
-		&book.Description,
-		&book.CreatedAt,
-		&book.UpdatedAt,
-	)
+	query1 := `
+	select
+		c.id,
+		c.name
+		from bookandcategory as bac
+		join category as c on c.id = bac.category_id
+	where bac.book_id = $1`
+
+	rows, err := db.Query(query, req.Id)
+	if err != nil {
+		return models.Book2{}, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(
+			&book.Id,
+			&book.Name,
+			&book.Price,
+			&book.Description,
+			&book.UpdatedAt,
+			&book.CreatedAt,
+		)
+		rows, err = db.Query(query1, req.Id)
+
+		for rows.Next() {
+			var cato models.CategoryName
+			err = rows.Scan(
+				&cato.Id,
+				&cato.Name,
+			)
+			book.Categories = append(book.Categories, cato)
+		}
+	}
 
 	if err != nil {
-		return models.Book{}, err
+		return models.Book2{}, err
 	}
 
 	return book, nil
+
 }
 
 func GetListBook(db *sql.DB, req models.GetListBookRequest) (models.GetListBookResponse, error) {
@@ -157,7 +185,7 @@ func UpdateBook(db *sql.DB, book models.UpdateBook) error {
 }
 
 func DeleteBook(db *sql.DB, req models.BookPrimeryKey) error {
-	_, err := db.Exec("DELETE FROM Categorys WHERE id = $1", req.Id)
+	_, err := db.Exec("DELETE FROM books WHERE id = $1", req.Id)
 
 	if err != nil {
 		return err

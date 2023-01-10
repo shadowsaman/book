@@ -15,10 +15,11 @@ func InsertCategory(db *sql.DB, category models.CreateCategory) (string, error) 
 	)
 
 	query := `
-		INSERT INTO categories (
+		INSERT INTO category (
 			id,
-			name
-		) VALUES ($1, $2)
+			name,
+			updated_at
+		) VALUES ($1, $2, now())
 	`
 
 	_, err := db.Exec(query,
@@ -42,13 +43,17 @@ func GetByIdCategory(db *sql.DB, req models.CategoryPrimeryKey) (models.Category
 	query := `
 		SELECT
 			id,
-			name
-		FROM categories WHERE id = $1
+			name,
+			created_at,
+			updated_at
+		FROM category WHERE id = $1
 	`
 
 	err := db.QueryRow(query, req.Id).Scan(
 		&category.Id,
 		&category.Name,
+		&category.CreatedAt,
+		&category.UpdatedAt,
 	)
 
 	if err != nil {
@@ -70,8 +75,10 @@ func GetListCategory(db *sql.DB, req models.GetListCategoryRequest) (models.GetL
 		SELECT
 			COUNT(*) OVER(),
 			id,
-			name
-		FROM categories
+			name,
+			created_at,
+			updated_at
+		FROM category
 	`
 
 	if req.Offset > 0 {
@@ -96,6 +103,8 @@ func GetListCategory(db *sql.DB, req models.GetListCategoryRequest) (models.GetL
 			&resp.Count,
 			&category.Id,
 			&category.Name,
+			&category.CreatedAt,
+			&category.UpdatedAt,
 		)
 
 		if err != nil {
@@ -112,9 +121,10 @@ func UpdateCategory(db *sql.DB, category models.UpdateCategory) error {
 
 	query := `
 		UPDATE 
-			categories 
+			category 
 		SET 
-			name = $2
+			name = $2,
+			updated_at = now()
 		WHERE id = $1
 	`
 
@@ -131,7 +141,7 @@ func UpdateCategory(db *sql.DB, category models.UpdateCategory) error {
 }
 
 func DeleteCategory(db *sql.DB, req models.CategoryPrimeryKey) error {
-	_, err := db.Exec("DELETE FROM Categorys WHERE id = $1", req.Id)
+	_, err := db.Exec("DELETE FROM category WHERE id = $1", req.Id)
 
 	if err != nil {
 		return err
